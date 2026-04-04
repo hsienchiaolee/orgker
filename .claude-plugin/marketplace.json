@@ -1,0 +1,14 @@
+{
+  "name": "orgker",
+  "owner": {
+    "name": "Kai Lee"
+  },
+  "plugins": [
+    {
+      "name": "orgker",
+      "source": "./",
+      "description": "Org-mode powered planning, orchestration, and execution for agentic workflows.",
+      "version": "0.1.0"
+    }
+  ]
+}

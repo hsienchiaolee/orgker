@@ -1,0 +1,10 @@
+{
+  "name": "orgker",
+  "description": "Org-mode powered planning, orchestration, and execution for agentic workflows. orgketect designs plans, orgkestrate dispatches parallel workers, orgket executes tasks.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Kai Lee"
+  },
+  "repository": "https://github.com/hsienchiaolee/orgker",
+  "license": "MIT"
+}
