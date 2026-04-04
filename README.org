@@ -1,0 +1,60 @@
+#+title: orgker
+#+author: Kai Lee
+
+Org-mode powered planning, orchestration, and execution for agentic workflows. A [[https://claude.com/plugins][Claude Code plugin]] with three skills that form a pipeline: architect a plan, orchestrate parallel execution, and do the work.
+
+* Skills
+
+| Skill | Role | What it does |
+|-------+------+-------------|
+| =orgketect= | Architect | Writes high-level .org implementation plans with context-inheriting tree structure and dependency graph |
+| =orgkestrate= | Orchestrator | Walks the dependency DAG, dispatches orgket workers in parallel, feeds execution summaries downstream |
+| =orgket= | Worker | Executes a single task, writes code and tests, commits, reports back via execution summary |
+
+* How It Works
+
+Plans are org-mode files where the heading hierarchy carries context. Properties propagate downward — an executing agent reading the path from root to its task has complete context without reading sibling branches.
+
+Tasks declare dependencies via =:DEPENDS:= properties, forming a DAG. The orchestrator dispatches independent tasks in parallel and feeds completed execution summaries to downstream workers.
+
+#+begin_example
+orgketect (plan) → orgkestrate (dispatch) → orgket (execute)
+                         ↑                       |
+                         └── execution summaries ─┘
+#+end_example
+
+* Integration with org-mcp
+
+orgker works best with [[https://github.com/hsienchiaolee/org-mcp][org-mcp]], an MCP server that exposes Org-mode's data model over JSON-RPC. org-mcp enables executing agents to query plan entries, read inherited properties, and write execution summaries back to org headings.
+
+Add your project's =.org/= directory to org-mcp's access list:
+
+#+begin_src emacs-lisp
+(add-to-list 'org-mcp-allowed-directories "<project-root>/.org/")
+#+end_src
+
+* Installation
+
+** From marketplace
+
+#+begin_example
+/plugin marketplace add hsienchiaolee/orgker
+/plugin install orgker@orgker
+#+end_example
+
+** From local path
+
+#+begin_example
+/plugin marketplace add /path/to/orgker
+/plugin install orgker@orgker
+#+end_example
+
+* Usage
+
+Invoke skills by name in Claude Code:
+
+- =/orgker:orgketect= — write an implementation plan
+- =/orgker:orgkestrate= — execute a plan
+- =/orgker:orgket= — run a single task (typically dispatched by orgkestrate)
+
+Or describe what you want and the skills trigger automatically based on context.
