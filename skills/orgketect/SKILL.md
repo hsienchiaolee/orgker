@@ -196,9 +196,12 @@ invent slugs, do not write `:ID:` lines. Org-ids must come from
 `org-id-get-create` running inside Emacs so they stay consistent with
 how orgkestrate and orgket read the plan later.
 
-The flow is **write-then-assign**, not capture-per-task:
+The flow is **write-then-assign per milestone file**, not
+capture-per-task. `00-overview.org` has no tasks and no ids, so
+`org_assign_ids` is never called on it. For each milestone file, in
+dependency order:
 
-1. **Write the full plan file directly** (Write tool, not capture).
+1. **Write the milestone file directly** (Write tool, not capture).
    Include every heading, property drawer (minus `:ID:`), body, and
    acceptance criteria. For `:DEPENDS:`, use human-readable
    placeholders that reference sibling task headlines, prefixed with
@@ -240,11 +243,10 @@ The flow is **write-then-assign**, not capture-per-task:
    from the returned entries (slugify each `:headline` the same way
    you slugified placeholders), then use the Edit tool to replace
    each `@slug` reference in `:DEPENDS:` with the corresponding id.
-
-4. **Multi-file plans:** repeat steps 1–3 per file. Cross-file
-   `:DEPENDS:` works the same way — reference task ids returned from
-   earlier files. Write files in dependency order so upstream ids are
-   known when you write downstream files.
+   Keep a cumulative slug → id map across milestone files so later
+   files can resolve cross-file `@`-placeholders against earlier
+   milestones. Writing in dependency order guarantees upstream ids
+   are always known before a downstream reference needs them.
 
 #### Why a milestone is not a "group dependency"
 
