@@ -46,7 +46,15 @@ If the spec covers multiple independent subsystems, suggest breaking it into sep
 
 ## Plan Structure
 
-### Header
+Plans are written in **two stages** with a mandatory user review gate
+between them. Stage 1 produces a task-free overview. Stage 2 writes
+each milestone file in dependency order, one per file, assigning
+org-ids as each file is written.
+
+### Stage 1 — Overview (`00-overview.org`)
+
+Write `00-overview.org` first. It contains the entire plan shape
+*without any tasks* so the user can catch structural problems cheaply.
 
 ```org
 #+title: <Feature Name> Implementation Plan
@@ -59,17 +67,9 @@ If the spec covers multiple independent subsystems, suggest breaking it into sep
 :ARCHITECTURE: <2-3 sentences about the structural approach>
 :END:
 
-<Brief description of the feature and its motivation. This is the root
-context — every heading below inherits it.>
-```
+<Brief description of the feature and its motivation. This is the
+root context — every milestone file inherits it.>
 
-`#+property` lines are file-level and inherited by all headings. The top heading's `:ARCHITECTURE:` property captures structural decisions.
-
-### File Structure (Level 2)
-
-Before defining tasks, map out which files will be created or modified. This scopes context — executing agents see only the files relevant to this feature, not the entire codebase.
-
-```org
 ** File Structure
 :PROPERTIES:
 :PURPOSE: Decomposition map for this feature
@@ -78,42 +78,88 @@ Before defining tasks, map out which files will be created or modified. This sco
 | File | Status | Responsibility |
 |------+--------+----------------|
 | src/auth/handler.ts | create | Request authentication and token validation |
-| src/auth/types.ts | create | Shared type definitions for auth module |
-| src/middleware.ts | modify | Register auth middleware in the chain |
+| src/auth/types.ts   | create | Shared type definitions for auth module |
+| src/middleware.ts   | modify | Register auth middleware in the chain |
+
+** Milestones
+
+*** <Milestone A Name>
+:PROPERTIES:
+:PURPOSE: <what this milestone delivers and why>
+:FILE: 01-<slug>.org
+:END:
+
+<Short prose description of the milestone.>
+
+- Components:
+  - <Component 1> — <one-line purpose>
+  - <Component 2> — <one-line purpose>
+- Depends on: <other milestone slugs, or "none">
+
+*** <Milestone B Name>
+:PROPERTIES:
+:PURPOSE: ...
+:FILE: 02-<slug>.org
+:END:
+...
 ```
 
-This informs task decomposition. Each task references files from this table.
+**Stage 1 contains no tasks, no `:ID:` properties, and no call to
+`org_assign_ids`.** It is pure scaffold. Headings under `** Milestones`
+are organizational, not dispatch targets.
 
-### Component Headings (Level 2)
+### Stage 2 — Review Gate (HARD STOP)
 
-Group tasks by component or module. Each component heading carries context its child tasks inherit:
+After writing `00-overview.org`, **stop and wait for explicit user
+approval**. Emit:
+
+> Overview written to `.org/plans/<dir>/00-overview.org`. Review the
+> milestones and file layout before I write out the tasks.
+
+Do not proceed on silence. Do not start writing milestone files. If
+the user requests changes, edit `00-overview.org` and re-prompt. Only
+once the user explicitly approves may you move to Stage 3.
+
+This gate is the core mechanism for catching wrong milestones, wrong
+component boundaries, or missing scope *before* tasks get written.
+
+### Stage 3 — Milestone Files
+
+On approval, for **each milestone in dependency order**, write one
+file named `NN-<slug>.org` containing the milestone's components and
+tasks, then assign ids (see "Task IDs" below).
+
+A milestone file looks like:
 
 ```org
+#+title: <Milestone Name>
+#+property: MILESTONE <slug>
+
+* <Milestone Name>
+:PROPERTIES:
+:OVERVIEW: ../00-overview.org
+:END:
+
+<Optional: a sentence or two of milestone-level context. Keep it
+short — the executing agent also loads 00-overview.org.>
+
 ** <Component Name>
 :PROPERTIES:
 :PURPOSE: <what this component does and why>
 :INTERFACES: <inputs, outputs, dependencies on other components>
 :END:
 
-<Additional context about this component. An executing agent reading
-only this heading and the root should understand where this component
-fits in the system.>
-```
+<Component context an executing agent reading root → component → task
+needs to understand where this fits.>
 
-### Task Headings (Level 3)
-
-Each task is a unit of work one executing agent picks up. It should result in roughly one commit or a small PR (under ~400 lines of change). A task heading plus its inherited context (root → component → task) is self-contained.
-
-```org
 *** TODO <Verb> <thing> — <why>
 :PROPERTIES:
 :FILES: <exact paths to create or modify, comma-separated>
-:DEPENDS: <comma-separated org-ids of prerequisite tasks, filled in after capture>
+:DEPENDS: <@placeholders or real ids from earlier files>
 :END:
 
 <What to build and why. Describe the behavior, not the implementation.
-Mention edge cases the executing agent should consider. Reference
-existing code patterns or docs the agent should look at.>
+Mention edge cases. Reference existing code patterns to follow.>
 
 **** Acceptance Criteria
 - <Observable outcome — verifiable by running code or tests>
@@ -124,6 +170,15 @@ existing code patterns or docs the agent should look at.>
 - <Edge case worth a test>
 - <Integration point to verify>
 ```
+
+Each task is a unit of work one executing agent picks up. It should
+result in roughly one commit or a small PR (under ~400 lines of
+change). A task heading plus its inherited context (overview →
+milestone → component → task) is self-contained.
+
+Write milestones in dependency order so that when a later milestone's
+`:DEPENDS:` references tasks from an earlier milestone, those ids are
+already assigned and known.
 
 ### What Goes in a Task
 
