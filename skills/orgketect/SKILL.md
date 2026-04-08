@@ -323,6 +323,9 @@ After writing the plan, review with fresh eyes:
 
 After saving the plan:
 
-"Plan saved to `.org/plans/<filename>.org`. Use orgkestrate to execute — it walks the dependency graph, dispatches orgket workers in parallel, and feeds execution summaries to downstream agents."
+"Plan saved to `.org/plans/<dir>/` (overview + <N> milestone files).
+Use orgkestrate to execute — it walks the dependency graph across all
+milestone files, dispatches orgket workers in parallel, and feeds
+execution summaries to downstream agents."
 
 If org-mcp isn't configured for `.org/`, remind the user to add it to `org-mcp-allowed-directories`.
