@@ -293,9 +293,10 @@ Design the graph intentionally:
 
 Design the tree so context flows downward without repetition:
 
-1. **Root**: Project-wide decisions (goal, architecture, tech stack)
-2. **Component**: Module-specific context (purpose, interfaces, boundaries)
-3. **Task**: Only task-specific details (files, acceptance, behavior)
+1. **Overview**: Project-wide decisions (goal, architecture, tech stack, file map)
+2. **Milestone**: Delivery slice and its dependencies on other milestones
+3. **Component**: Module-specific context (purpose, interfaces, boundaries)
+4. **Task**: Only task-specific details (files, acceptance, behavior)
 
 A task should never repeat information from its ancestors. If you're writing the same context in multiple tasks, move it up to the component or root level.
 
