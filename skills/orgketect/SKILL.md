@@ -310,7 +310,22 @@ If a task feels too big, split it. More small tasks means better parallelism and
 
 ## Self-Review
 
-After writing the plan, review with fresh eyes:
+### After Stage 1 (overview, before the user review gate)
+
+1. **Spec coverage at the milestone level**: Every major spec
+   requirement maps to at least one milestone.
+2. **Milestone independence**: Milestones are ordered so dependencies
+   flow forward only. No cycles.
+3. **File map completeness**: Every file a task will touch appears in
+   the File Structure table.
+4. **Scope sanity**: No milestone is obviously going to contain 20+
+   tasks. If one does, split it.
+
+Fix issues before emitting the review-gate message.
+
+### After Stage 3 (milestone files written)
+
+Review with fresh eyes:
 
 1. **Spec coverage**: Point to a task for each requirement. List gaps.
 2. **Context sufficiency**: Pick any leaf task. Read only root → component → task. Does the executing agent have enough to start? If not, add context to the appropriate ancestor.
