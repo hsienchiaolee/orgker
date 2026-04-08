@@ -13,33 +13,31 @@ The org tree is the plan's primary abstraction. Each heading level adds specific
 
 ## Plan Location
 
-Save plans to `.org/plans/` in the project root. Each milestone or
-component lives in its own file so executing agents only load the
-context they need:
+Every plan is a **directory** under `.org/plans/`. Single-file plans
+are not supported — the smallest valid plan is an overview file plus
+one milestone file.
 
 ```
 .org/plans/YYYY-MM-DD-<feature-name>/
-  00-overview.org           # cross-cutting context, links to component files
-  01-<component-a>.org
-  02-<component-b>.org
+  00-overview.org           # goals, architecture, file map, milestone list
+  01-<milestone-slug>.org   # first milestone's components + tasks
+  02-<milestone-slug>.org
   ...
 ```
 
-For small features a single file is fine:
-
-```
-.org/plans/YYYY-MM-DD-<feature-name>.org
-```
+Milestone files are numbered by intended dependency/review order. The
+word "milestone" does **not** appear in filenames — just a short slug.
 
 ### Bootstrapping a new project
 
-If `.org/` doesn't exist yet, create it directly: `mkdir -p .org/plans/`.
-The project root is already in org-mcp's allowed directories (it comes
-in via the MCP `initialize` roots handshake), so anything under
-`.org/` is automatically writable by org-mcp tools — no extra config.
+If `.org/` doesn't exist yet, create the plan directory directly:
+`mkdir -p .org/plans/YYYY-MM-DD-<feature-name>/`. The project root is
+already in org-mcp's allowed directories (it comes in via the MCP
+`initialize` roots handshake), so anything under `.org/` is
+automatically writable by org-mcp tools — no extra config.
 
-You do **not** need org-mcp's capture tool to *create* the file —
-write it directly with the file-write tools available in the session.
+You do **not** need org-mcp's capture tool to *create* files — write
+them directly with the file-write tools available in the session.
 org-mcp is only needed for assigning org-ids (see below).
 
 ## Scope Check
