@@ -13,17 +13,34 @@ The org tree is the plan's primary abstraction. Each heading level adds specific
 
 ## Plan Location
 
-Save plans to `.org/plans/` in the project root:
+Save plans to `.org/plans/` in the project root. Each milestone or
+component lives in its own file so executing agents only load the
+context they need:
+
+```
+.org/plans/YYYY-MM-DD-<feature-name>/
+  00-overview.org           # cross-cutting context, links to component files
+  01-<component-a>.org
+  02-<component-b>.org
+  ...
+```
+
+For small features a single file is fine:
 
 ```
 .org/plans/YYYY-MM-DD-<feature-name>.org
 ```
 
-If `.org/` doesn't exist yet, create it and remind the user to add it to their org-mcp allowed directories so executing agents can query the plan:
+### Bootstrapping a new project
 
-```elisp
-(add-to-list 'org-mcp-allowed-directories "<project-root>/.org/")
-```
+If `.org/` doesn't exist yet, create it directly: `mkdir -p .org/plans/`.
+The project root is already in org-mcp's allowed directories (it comes
+in via the MCP `initialize` roots handshake), so anything under
+`.org/` is automatically writable by org-mcp tools — no extra config.
+
+You do **not** need org-mcp's capture tool to *create* the file —
+write it directly with the file-write tools available in the session.
+org-mcp is only needed for assigning org-ids (see below).
 
 ## Scope Check
 
@@ -121,15 +138,80 @@ existing code patterns or docs the agent should look at.>
 
 ### Task IDs
 
-**Do not pre-generate task IDs.** Do not call `uuidgen`, do not invent slugs, do not write `:ID:` properties by hand. Org-ids are assigned by org-mcp when the task is captured — the capture tool returns the new id.
+**Never hand-write `:ID:` properties.** Do not call `uuidgen`, do not
+invent slugs, do not write `:ID:` lines. Org-ids must come from
+`org-id-get-create` running inside Emacs so they stay consistent with
+how orgkestrate and orgket read the plan later.
 
-Workflow:
+The flow is **write-then-assign**, not capture-per-task:
 
-1. Draft the plan structure (headlines, files, bodies, acceptance criteria) without `:ID:` or `:DEPENDS:` values.
-2. Capture tasks into the plan file via org-mcp's capture/mutate tool, which calls `org-id-get-create` and returns the assigned id.
-3. As ids come back, record them and fill in `:DEPENDS:` on dependent tasks in subsequent capture calls (or via a follow-up property update).
+1. **Write the full plan file directly** (Write tool, not capture).
+   Include every heading, property drawer (minus `:ID:`), body, and
+   acceptance criteria. For `:DEPENDS:`, use human-readable
+   placeholders that reference sibling task headlines, prefixed with
+   `@`:
 
-If org-mcp tools are not available in the current session, stop and tell the user — do not fall back to `uuidgen` or hand-written slugs. The point of routing through org-mcp is that ids, file writes, and dependency wiring stay consistent with how orgkestrate and orgket read the plan later.
+   ```org
+   *** TODO Validate input
+   :PROPERTIES:
+   :FILES: src/auth/validate.ts
+   :END:
+
+   *** TODO Hash password
+   :PROPERTIES:
+   :FILES: src/auth/hash.ts
+   :DEPENDS: @validate-input
+   :END:
+   ```
+
+   The placeholder is just `@` + a slugified version of the target
+   headline. It's a marker, not a real id.
+
+2. **Call `org_assign_ids`** on the file. The tool walks every
+   heading carrying a TODO-state keyword (including custom states
+   like `NEXT`, `WAITING`) and assigns an org-id via
+   `org-id-get-create`. It returns:
+
+   ```
+   :file "/path/to/plan.org"
+   :entries ((:id "abc-123" :headline "Validate input" :level 3)
+             (:id "def-456" :headline "Hash password"   :level 3)
+             ...)
+   ```
+
+   Non-task headings (`* Plan`, `** Component A`, `** File Structure`)
+   are intentionally left without ids — they're organizational scaffold,
+   not dispatch targets.
+
+3. **Resolve `@`-placeholders to real ids.** Build a slug → id map
+   from the returned entries (slugify each `:headline` the same way
+   you slugified placeholders), then use the Edit tool to replace
+   each `@slug` reference in `:DEPENDS:` with the corresponding id.
+
+4. **Multi-file plans:** repeat steps 1–3 per file. Cross-file
+   `:DEPENDS:` works the same way — reference task ids returned from
+   earlier files. Write files in dependency order so upstream ids are
+   known when you write downstream files.
+
+#### Why a milestone is not a "group dependency"
+
+`org_assign_ids` only assigns ids to TODO-state headings on purpose.
+If you need a milestone gate ("don't start integration tests until
+all of Authentication is done"), model it as an explicit gate task:
+
+```org
+*** TODO Authentication complete
+:PROPERTIES:
+:DEPENDS: @validate-input, @hash-password, @issue-token
+:END:
+```
+
+Now downstream tasks depend on the gate task — no special "group id"
+semantics needed in the executor.
+
+If the `org_assign_ids` tool is not available in the current session,
+stop and tell the user — do not fall back to `uuidgen` or
+hand-written slugs.
 
 ### What Does NOT Go in a Task
 
