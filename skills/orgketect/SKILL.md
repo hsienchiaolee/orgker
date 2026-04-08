@@ -92,9 +92,8 @@ Each task is a unit of work one executing agent picks up. It should result in ro
 ```org
 *** TODO <Verb> <thing> — <why>
 :PROPERTIES:
-:ID: <generate with org-id-get-create or uuidgen>
 :FILES: <exact paths to create or modify, comma-separated>
-:DEPENDS: <comma-separated org-ids of prerequisite tasks, if any>
+:DEPENDS: <comma-separated org-ids of prerequisite tasks, filled in after capture>
 :END:
 
 <What to build and why. Describe the behavior, not the implementation.
@@ -119,6 +118,18 @@ existing code patterns or docs the agent should look at.>
 - **Context pointers**: Existing code patterns to follow, docs to read, related components.
 - **Test guidance**: Behaviors and edge cases to test, not test code.
 - **Dependencies**: Org-ids of tasks that must complete first. Tasks without dependencies can run in parallel.
+
+### Task IDs
+
+**Do not pre-generate task IDs.** Do not call `uuidgen`, do not invent slugs, do not write `:ID:` properties by hand. Org-ids are assigned by org-mcp when the task is captured — the capture tool returns the new id.
+
+Workflow:
+
+1. Draft the plan structure (headlines, files, bodies, acceptance criteria) without `:ID:` or `:DEPENDS:` values.
+2. Capture tasks into the plan file via org-mcp's capture/mutate tool, which calls `org-id-get-create` and returns the assigned id.
+3. As ids come back, record them and fill in `:DEPENDS:` on dependent tasks in subsequent capture calls (or via a follow-up property update).
+
+If org-mcp tools are not available in the current session, stop and tell the user — do not fall back to `uuidgen` or hand-written slugs. The point of routing through org-mcp is that ids, file writes, and dependency wiring stay consistent with how orgkestrate and orgket read the plan later.
 
 ### What Does NOT Go in a Task
 
