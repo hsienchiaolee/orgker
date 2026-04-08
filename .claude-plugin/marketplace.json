@@ -8,7 +8,7 @@
       "name": "orgker",
       "source": "./",
       "description": "Org-mode powered planning, orchestration, and execution for agentic workflows.",
-      "version": "0.1.0"
+      "version": "0.1.1"
     }
   ]
 }
